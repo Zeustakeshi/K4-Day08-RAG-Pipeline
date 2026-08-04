@@ -211,6 +211,6 @@ if __name__ == "__main__":
         {"content": "Các phương thức thanh toán hỗ trợ trên Shopee Vietnam", "score": 0.6, "metadata": {}},
         {"content": "Quy định đăng bán sản phẩm dành cho người bán", "score": 0.5, "metadata": {}},
     ]
-    results = rerank("chính sách trả hàng shopee", dummy_candidates, top_k=2)
+    results = rerank("chính sách trả hàng shopee", dummy_candidates, top_k=2, method="cross_encoder")
     for r in results:
         print(f"[{r['score']:.3f}] {r['content']}")
