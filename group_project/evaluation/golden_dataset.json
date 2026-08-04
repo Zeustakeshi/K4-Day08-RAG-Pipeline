@@ -1,17 +1,77 @@
 [
   {
-    "question": "Người mua có thể yêu cầu trả hàng/hoàn tiền trong thời hạn bao lâu sau khi nhận hàng?",
-    "expected_answer": "Trong vòng 15 ngày kể từ khi giao hàng thành công (24 giờ đối với thực phẩm tươi sống/đông lạnh).",
-    "expected_context": "Trang Returns and Refunds Policy, mục Return/Refund Eligibility"
+    "question": "Tết Nguyên Đán còn được gọi bằng những tên nào khác?",
+    "expected_answer": "Tết Nguyên Đán còn được gọi là Tết Cả, Tết Ta, Tết Âm lịch, Tết Cổ truyền, Tết Á Đông, hoặc đơn giản là Tết.",
+    "expected_context": "tet-nguyen-dan.md"
   },
   {
-    "question": "Shopee hỗ trợ những phương thức thanh toán nào?",
-    "expected_answer": "ShopeePay Wallet, thẻ tín dụng/ghi nợ, trả góp qua thẻ, QR Code, chuyển khoản qua app ngân hàng, thẻ NAPAS, Apple Pay, Google Pay, và COD.",
-    "expected_context": "Trang Payment Methods Overview"
+    "question": "Toàn bộ dịp Tết Nguyên Đán ở Việt Nam thường kéo dài trong khoảng thời gian nào?",
+    "expected_answer": "Thường kéo dài khoảng 7 đến 8 ngày cuối năm cũ và 7 ngày đầu năm mới, tức từ 23 tháng Chạp đến hết ngày 7 tháng Giêng.",
+    "expected_context": "tet-nguyen-dan.md"
   },
   {
-    "question": "Người bán không được đăng bán những sản phẩm nào?",
-    "expected_answer": "Hàng giả/nhái, sản phẩm bất hợp pháp, vi phạm sở hữu trí tuệ, và các mặt hàng nằm trong danh sách cấm của sàn.",
-    "expected_context": "Trang Product Listing Regulations, mục Prohibited Content"
+    "question": "Trước Tết Nguyên Đán, người Việt thường có phong tục cúng gì vào ngày 23 và 29/30 tháng Chạp?",
+    "expected_answer": "Ngày 23 tháng Chạp âm lịch có phong tục cúng Táo Quân, và ngày 29 hoặc 30 tháng Chạp có phong tục cúng Tất Niên.",
+    "expected_context": "tet-nguyen-dan.md"
+  },
+  {
+    "question": "Theo nguồn gốc chữ Hán, \"Nguyên Đán\" có nghĩa là gì?",
+    "expected_answer": "\"Nguyên\" có nghĩa là sự khởi đầu hay sơ khai, còn \"đán\" có nghĩa là buổi sáng sớm/bình minh; \"Nguyên Đán\" nghĩa là buổi sáng đầu tiên/ngày đầu tiên của một năm Nông lịch.",
+    "expected_context": "tet-nguyen-dan.md"
+  },
+  {
+    "question": "Áo dài xuất hiện từ khi nào và do ai cách tân từ áo ngũ thân?",
+    "expected_answer": "Áo dài xuất hiện từ những năm 1930, do Le Mur Cát Tường cách tân theo hướng Tây hóa từ áo ngũ thân.",
+    "expected_context": "de-an-bao-ton-ao-dai.md"
+  },
+  {
+    "question": "Áo ngũ thân có cấu tạo các vạt áo như thế nào?",
+    "expected_answer": "Áo ngũ thân có hai vạt áo may lại với nhau ở phía sau, hai vạt áo may lại với nhau ở phía trước, và một \"vạt áo nhỏ\" ẩn bên dưới vạt áo chính phía trước.",
+    "expected_context": "de-an-bao-ton-ao-dai.md"
+  },
+  {
+    "question": "Ai đã ban sắc lệnh năm 1744 yêu cầu triều đình mặc quần và áo dài có khuy phía trước?",
+    "expected_answer": "Chúa Nguyễn Phúc Khoát ở Huế đã ban sắc lệnh vào năm 1744 yêu cầu cả nam và nữ trong triều đình của mình phải mặc quần và áo dài có khuy ở phía trước, để phân biệt với người miền Bắc.",
+    "expected_context": "de-an-bao-ton-ao-dai.md"
+  },
+  {
+    "question": "Le Mur Cát Tường đã cải cách áo ngũ thân thành áo dài Lemur như thế nào vào những năm 1930?",
+    "expected_answer": "Le Mur Cát Tường biến áo ngũ thân chỉ còn lại hai vạt trước và sau, vạt trước được nối dài chấm đất, thân trên may ôm sát theo đường cong cơ thể, hàng nút phía trước dịch chuyển sang chỗ mở áo dọc theo vai và chạy dọc theo một bên sườn, eo áo được nhấn nhẹ.",
+    "expected_context": "de-an-bao-ton-ao-dai.md"
+  },
+  {
+    "question": "Theo thống kê năm 2009, Việt Nam có bao nhiêu lễ hội và lễ hội dân gian chiếm tỷ lệ bao nhiêu?",
+    "expected_answer": "Theo thống kê năm 2009, Việt Nam có 7.966 lễ hội, trong đó lễ hội dân gian có 7.039 lễ hội, chiếm 88,36%.",
+    "expected_context": "quy-che-quan-ly-le-hoi.md"
+  },
+  {
+    "question": "Có ý kiến đề xuất phân cấp lễ hội ở Việt Nam theo mấy cấp quản lý, gồm những cấp nào?",
+    "expected_answer": "Có đề xuất phân cấp lễ hội theo 4 cấp: lễ hội cấp quốc gia, lễ hội cấp tỉnh, lễ hội cấp huyện và lễ hội cấp làng.",
+    "expected_context": "quy-che-quan-ly-le-hoi.md"
+  },
+  {
+    "question": "Tính đến hết năm 2014, Việt Nam có bao nhiêu lễ hội được đưa vào danh mục Di sản văn hóa phi vật thể cấp quốc gia?",
+    "expected_answer": "Tính đến hết năm 2014, Việt Nam có 27 lễ hội được đưa vào danh mục Di sản văn hóa phi vật thể cấp quốc gia.",
+    "expected_context": "quy-che-quan-ly-le-hoi.md"
+  },
+  {
+    "question": "Lễ hội đền Hùng được tổ chức ở quy mô quốc gia theo chu kỳ bao nhiêu năm một lần?",
+    "expected_answer": "Lễ hội đền Hùng được tổ chức ở quy mô quốc gia 5 năm một lần; những năm số lẻ còn lại được tổ chức ở quy mô cấp tỉnh.",
+    "expected_context": "quy-che-quan-ly-le-hoi.md"
+  },
+  {
+    "question": "Giỗ Tổ Hùng Vương diễn ra vào ngày nào âm lịch và mang ý nghĩa gì?",
+    "expected_answer": "Giỗ Tổ Hùng Vương diễn ra vào ngày 10 tháng 3 âm lịch, mang ý nghĩa tưởng nhớ về nguồn cội 18 đời Vua Hùng.",
+    "expected_context": "article_05.md (Giỗ Tổ Hùng Vương)"
+  },
+  {
+    "question": "Ngày Giỗ Tổ Hùng Vương năm 2026 rơi vào ngày nào theo dương lịch?",
+    "expected_answer": "Giỗ Tổ Hùng Vương năm 2026 rơi vào ngày 26 tháng 4 dương lịch.",
+    "expected_context": "article_05.md (Giỗ Tổ Hùng Vương)"
+  },
+  {
+    "question": "Cuốn \"Việt Nam phong tục\" của Phan Kế Bính được đăng báo và in thành sách vào năm nào?",
+    "expected_answer": "\"Việt Nam phong tục\" được đăng trên Đông Dương tạp chí vào những năm 1913 và 1914, và được in thành sách năm 1915.",
+    "expected_context": "article_04.md (Việt Nam Phong Tục - Phan Kế Bính)"
   }
 ]
