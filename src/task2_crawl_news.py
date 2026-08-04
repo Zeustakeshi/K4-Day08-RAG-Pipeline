@@ -1,35 +1,54 @@
 """
-Task 2 — Crawl bài viết/hướng dẫn hỗ trợ khách hàng về thương mại điện tử.
+Task 2 — Crawl bài viết về phong tục tập quán, lễ hội lớn và trang phục truyền thống Việt Nam.
 
 Hướng dẫn:
-    1. Crawl tối thiểu 5 bài viết từ trung tâm trợ giúp công khai của một sàn TMĐT.
-    2. Sử dụng Crawl4AI hoặc thư viện crawling tương tự.
+    1. Crawl tối thiểu 5 bài viết về lễ hội, phong tục, trang phục truyền thống.
+    2. Sử dụng requests / BeautifulSoup.
     3. Lưu output vào data/landing/news/
-    4. Mỗi bài lưu 1 file JSON với metadata (url, title, date_crawled, content).
-
-Cài đặt:
-    pip install crawl4ai
-    playwright install chromium   # bắt buộc — pip install crawl4ai KHÔNG tự tải browser binary,
-                                   # thiếu bước này sẽ báo lỗi
-                                   # "BrowserType.launch: Executable doesn't exist"
-
-Gợi ý chủ đề: theo dõi đơn hàng, đổi phương thức thanh toán, bằng chứng hoàn tiền,
-mua hàng xuyên biên giới.
-
-Lưu ý: một số trang help center dùng JavaScript render (SPA) — nếu crawl về chỉ thấy
-tiêu đề mà không có nội dung, đổi sang bài viết khác cùng domain thay vì cố xử lý.
+    4. Mỗi bài lưu 1 file JSON chứa metadata (url, title, crawl_date, date_crawled, content, content_markdown).
 """
 
-"""
-Task 2 — Crawl bài viết/hướng dẫn hỗ trợ khách hàng về thương mại điện tử.
-"""
-
-import asyncio
 import json
+import re
 from datetime import datetime
 from pathlib import Path
+import requests
 
 DATA_DIR = Path(__file__).parent.parent / "data" / "landing" / "news"
+
+# Danh sách URL bài viết phong tục & lễ hội Việt Nam
+TARGET_ARTICLES = [
+    {
+        "id": 1,
+        "title_default": "Tết Nguyên Đán - Phong tục & Lễ hội",
+        "url": "https://vi.wikipedia.org/wiki/T%E1%BA%BFt_Nguy%C3%AAn_%C4%90%C3%A1n"
+    },
+    {
+        "id": 2,
+        "title_default": "Giỗ Tổ Hùng Vương - Lễ hội truyền thống",
+        "url": "https://vi.wikipedia.org/wiki/Gi%E1%BB%97_T%E1%BB%95_H%C3%B9ng_V%C6%B0%C6%A1ng"
+    },
+    {
+        "id": 3,
+        "title_default": "Tết Trung Thu - Phong tục cổ truyền",
+        "url": "https://vi.wikipedia.org/wiki/T%E1%BA%BFt_Trung_thu"
+    },
+    {
+        "id": 4,
+        "title_default": "Áo dài - Trang phục truyền thống Việt Nam",
+        "url": "https://vi.wikipedia.org/wiki/%C3%81o_d%C3%A0i"
+    },
+    {
+        "id": 5,
+        "title_default": "Tết Đoan Ngọ - Phong tục cổ truyền",
+        "url": "https://vi.wikipedia.org/wiki/T%E1%BA%BFt_%C4%90oan_Ng%E1%BB%8D"
+    },
+    {
+        "id": 6,
+        "title_default": "Lễ hội Chùa Hương - Phong tục hành hương",
+        "url": "https://vi.wikipedia.org/wiki/Ch%C3%B9a_H%C6%B0%C6%A1ng"
+    }
+]
 
 
 def setup_directory():
@@ -37,57 +56,91 @@ def setup_directory():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
-async def crawl_article(url: str) -> dict:
-    """
-    Crawl một bài viết và trả về dict chứa metadata + content.
-    """
-    from crawl4ai import AsyncWebCrawler
-
-    async with AsyncWebCrawler() as crawler:
-        result = await crawler.arun(url=url)
+def extract_title_and_content(html: str, fallback_title: str) -> tuple[str, str]:
+    """Trích xuất title và nội dung văn bản từ HTML bài viết."""
+    try:
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html, "html.parser")
         
-        # Xử lý tiêu đề an toàn từ metadata
-        title = "Unknown"
-        if result.metadata and isinstance(result.metadata, dict):
-            title = result.metadata.get("title", "Unknown")
-            
-        return {
-            "url": url,
-            "title": title,
-            "date_crawled": datetime.now().isoformat(),
-            "content_markdown": result.markdown,
-        }
+        # Tiêu đề
+        title_tag = soup.find("h1", id="firstHeading") or soup.find("h1") or soup.find("title")
+        title = title_tag.get_text(strip=True) if title_tag else fallback_title
+
+        # Nội dung chính
+        content_div = soup.find("div", id="mw-content-text") or soup.find("body") or soup
+        # Loại bỏ các thẻ không cần thiết
+        for element in content_div(["script", "style", "table", "nav", "footer", "form"]):
+            element.decompose()
+
+        paragraphs = [p.get_text(strip=True) for p in content_div.find_all("p") if p.get_text(strip=True)]
+        content_text = "\n\n".join(paragraphs)
+        if not content_text or len(content_text) < 100:
+            content_text = content_div.get_text(separator="\n", strip=True)
+
+        return title, content_text
+    except Exception:
+        # Fallback
+        title_match = re.search(r"<title>(.*?)</title>", html, re.IGNORECASE | re.DOTALL)
+        title = title_match.group(1).strip() if title_match else fallback_title
+
+        text = re.sub(r"<script.*?>.*?</script>", "", html, flags=re.DOTALL | re.IGNORECASE)
+        text = re.sub(r"<style.*?>.*?</style>", "", text, flags=re.DOTALL | re.IGNORECASE)
+        text = re.sub(r"<.*?>", " ", text)
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        content_text = "\n".join(lines)
+        return title, content_text
 
 
-async def crawl_all():
-    """Crawl chọn lọc các bài viết bị lỗi."""
+def fetch_url(session: requests.Session, url: str) -> str:
+    """Tải nội dung trang web bằng requests."""
+    response = session.get(url, timeout=10)
+    response.raise_for_status()
+    response.encoding = "utf-8"
+    return response.text
+
+
+def crawl_news():
+    """Crawl bài viết về phong tục & lễ hội và lưu thành các file JSON."""
     setup_directory()
+    print("=" * 60)
+    print("Task 2: Crawl bài viết về phong tục & lễ hội Việt Nam")
+    print("=" * 60)
 
-    # Chỉ crawl lại những file bị lỗi (2, 4, 5) để tránh spam các link đã thành công (1, 3)
-    # Mapping định dạng: số thứ tự file -> link mới cần thay thế
-    urls_to_fix = {
-        2: "https://help.shopee.vn/portal/4/article/79213", # Thay cho file 2 bị rỗng
-        4: "https://help.shopee.vn/portal/4/article/79198", # Thay cho file 4 bị block
-        5: "https://help.shopee.vn/portal/4/article/77244"  # Thay cho file 5 bị block
-    }
+    session = requests.Session()
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    })
 
-    # Chuyển dict thành list để dễ xử lý vòng lặp và delay
-    items = list(urls_to_fix.items())
-    
-    for i, (file_index, url) in enumerate(items):
-        print(f"Crawling link bổ sung cho bài {file_index:02d}: {url}")
-        article = await crawl_article(url)
-
-        # Ghi đè trực tiếp vào file tương ứng (article_02.json, article_04.json, article_05.json)
+    for item in TARGET_ARTICLES:
+        file_index = item["id"]
+        url = item["url"]
+        fallback_title = item["title_default"]
         filename = f"article_{file_index:02d}.json"
         filepath = DATA_DIR / filename
-        filepath.write_text(json.dumps(article, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"  ✓ Saved: {filepath}")
-        
-        # Thêm độ trễ 5 giây để tránh bị Shopee block giữa các lần tải
-        if i < len(items) - 1:
-            print("  ⏳ Đang nghỉ 5s để tránh bị block...")
-            await asyncio.sleep(5)
+
+        print(f"Crawling bài [{file_index:02d}]: {url}")
+
+        try:
+            html = fetch_url(session, url)
+            title, content = extract_title_and_content(html, fallback_title)
+            crawled_time = datetime.now().isoformat()
+
+            article_data = {
+                "url": url,
+                "title": title,
+                "crawl_date": crawled_time,
+                "date_crawled": crawled_time,
+                "content": content,
+                "content_markdown": f"# {title}\n\n{content}"
+            }
+
+            filepath.write_text(json.dumps(article_data, ensure_ascii=False, indent=2), encoding="utf-8")
+            print(f"  ✓ Đã lưu: {filepath.name} ({len(content)} ký tự)")
+        except Exception as e:
+            print(f"  ✗ Lỗi khi crawl {url}: {e}")
+
+    print("\n✓ Hoàn tất Task 2! Dữ liệu đã lưu tại:", DATA_DIR)
+
 
 if __name__ == "__main__":
-    asyncio.run(crawl_all())
+    crawl_news()
