@@ -10,34 +10,31 @@ Logic:
     3. Rerank
     4. Nếu top result score < threshold → fallback sang PageIndex
     5. Return top_k results
-
-⚠️ BẪY THƯỜNG GẶP — đọc kỹ trước khi code:
-    Nếu bạn dùng điểm RRF đã fuse (Task 7) để so với score_threshold, bạn sẽ gặp bug
-    thật: RRF max score luôn ≈ 1/(k+1) ≈ 0.0164 (k=60) BẤT KỂ nội dung có liên quan
-    hay không. Nếu đặt threshold thấp (như 0.005) để "hợp" với thang điểm RRF, thực
-    chất KHÔNG câu hỏi nào đủ thấp để trigger fallback nữa — kể cả query hoàn toàn vô
-    nghĩa vẫn trả về kết quả "hybrid" (rác) thay vì fallback đúng như thiết kế.
-
-    Cách sửa đúng: giữ điểm cosine similarity GỐC của semantic_search (trước khi qua
-    RRF) làm căn cứ quyết định fallback, tách biệt khỏi điểm RRF dùng để sắp xếp kết
-    quả cuối cùng. Calibrate threshold bằng cách tự đo: chạy vài câu hỏi chắc chắn
-    liên quan và vài câu chắc chắn lạc đề/rác qua semantic_search, xem khoảng cách
-    điểm số giữa hai nhóm rồi chọn ngưỡng nằm giữa.
 """
 
-from .task5_semantic_search import semantic_search
-from .task6_lexical_search import lexical_search
-from .task7_reranking import rerank, rerank_rrf
-from .task8_pageindex_vectorless import pageindex_search
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+try:
+    from src.task5_semantic_search import semantic_search
+    from src.task6_lexical_search import lexical_search
+    from src.task7_reranking import rerank, rerank_rrf
+    from src.task8_pageindex_vectorless import pageindex_search
+except ImportError:
+    from task5_semantic_search import semantic_search
+    from task6_lexical_search import lexical_search
+    from task7_reranking import rerank, rerank_rrf
+    from task8_pageindex_vectorless import pageindex_search
 
 
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
 
-# TODO: Calibrate threshold này bằng cách tự đo điểm cosine của semantic_search
-# cho câu hỏi liên quan vs câu hỏi lạc đề (xem ghi chú ở trên) — ĐỪNG copy nguyên
-# giá trị mẫu, mỗi corpus/embedding model sẽ cho khoảng điểm khác nhau.
 SCORE_THRESHOLD = 0.3   # Nếu best score (cosine gốc) < threshold → fallback PageIndex
 DEFAULT_TOP_K = 5
 RERANK_METHOD = "cross_encoder"  # "cross_encoder" | "mmr" | "rrf"
@@ -66,7 +63,7 @@ def retrieve(
     Args:
         query: Câu truy vấn
         top_k: Số lượng kết quả cuối cùng
-        score_threshold: Ngưỡng điểm cosine gốc tối thiểu (KHÔNG phải điểm RRF)
+        score_threshold: Ngưỡng điểm cosine gốc tối thiểu
         use_reranking: Có áp dụng reranking hay không
 
     Returns:
@@ -94,7 +91,7 @@ def retrieve(
     else:
         final_results = merged[:top_k]
 
-    # Step 4: Check threshold DÙNG ĐIỂM COSINE GỐC (dense_results), KHÔNG PHẢI RRF
+    # Step 4: Check threshold DÙNG ĐIỂM COSINE GỐC (dense_results)
     best_score = dense_results[0]["score"] if dense_results else 0.0
     if best_score < score_threshold:
         print(f"  ⚠ Semantic best score ({best_score:.3f}) < threshold ({score_threshold})")
@@ -110,7 +107,7 @@ if __name__ == "__main__":
         "Ý nghĩa của tục xông đất đầu năm và những điều kiêng kỵ trong ngày Tết Nguyên Đán là gì?",
         "Trang phục Áo ngũ thân nam truyền thống gồm những chi tiết nào và khác gì với Áo dài tân thời?",
         "Quy chế quản lý lễ hội truyền thống quy định những gì?",
-        "xyzabc123nonsense",  # Query không có kết quả → test fallback
+        "xyzabc123nonsense",
     ]
 
     for q in test_queries:
