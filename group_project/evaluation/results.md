@@ -4,7 +4,7 @@
 
 > **RAGAS** (0.1.21). LLM judge: `openai/gpt-4o-mini` qua OpenRouter. Embeddings: `sentence-transformers/all-MiniLM-L6-v2` (local).
 
-> Chạy trên **2/15** câu hỏi của golden dataset (giới hạn do quota free tier OpenRouter — 50 request/ngày cho cả tài khoản, RAGAS gọi LLM nhiều lần/câu/metric).
+> Chạy trên **6/15** câu hỏi của golden dataset (giới hạn do quota free tier OpenRouter — 50 request/ngày cho cả tài khoản, RAGAS gọi LLM nhiều lần/câu/metric).
 
 ---
 
@@ -12,11 +12,11 @@
 
 | Metric | Config A (hybrid + rerank) | Config B (dense-only) | Δ |
 |--------|---------------------------|----------------------|---|
-| faithfulness | N/A | N/A | N/A |
-| answer_relevancy | N/A | N/A | N/A |
-| context_recall | N/A | N/A | N/A |
-| context_precision | N/A | N/A | N/A |
-| **Average** | **N/A** | **N/A** | **N/A** |
+| faithfulness | 0.796 | 0.400 | 0.396 |
+| answer_relevancy | 0.424 | 0.000 | 0.424 |
+| context_recall | 1.000 | 0.167 | 0.833 |
+| context_precision | 0.954 | 0.087 | 0.867 |
+| **Average** | **0.794** | **0.164** | **0.630** |
 
 ---
 
@@ -29,7 +29,7 @@
 > Chỉ dùng Semantic Search (Task 5, cosine similarity trên embedding), không hybrid, không rerank, không fallback.
 
 **Kết luận:**
-> ⚠ **BLOCKED**: Không tính được điểm — `OPENROUTER_API_KEY` trong `.env` trả về lỗi 401 ("User not found", key hết hạn/bị revoke) nên LLM judge của RAGAS không gọi được. Cần thay key OpenRouter hợp lệ rồi chạy lại `python group_project/evaluation/eval_pipeline.py` để có điểm số thật — pipeline retrieval/generation/RAGAS đã chạy end-to-end đúng logic, chỉ thiếu key hoạt động.
+> Config A đạt điểm trung bình cao hơn Config B (0.794 vs 0.164), cho thấy hybrid search + reranking cải thiện độ liên quan/độ chính xác của context được truy xuất, giúp câu trả lời bám sát nguồn hơn.
 
 ---
 
@@ -37,9 +37,9 @@
 
 | # | Question | Faithfulness | Relevance | Recall | Failure Stage | Root Cause |
 |---|----------|-------------|-----------|--------|---------------|------------|
-| 1 | *(xem per-question scores trong log console khi chạy `python eval_pipeline.py`)* | | | | | |
-| 2 | | | | | | |
-| 3 | | | | | | |
+| 1 | Áo ngũ thân có cấu tạo các vạt áo như thế nào? | 0.444 | 0.036 | 1.000 | Generation | Câu trả lời lệch trọng tâm câu hỏi hoặc không đủ cụ thể. |
+| 2 | Toàn bộ dịp Tết Nguyên Đán ở Việt Nam thường kéo dài trong khoảng thời | 0.500 | 0.523 | 1.000 | Generation | Câu trả lời chứa nội dung không được context hỗ trợ (có dấu hiệu hallucination). |
+| 3 | Áo dài xuất hiện từ khi nào và do ai cách tân từ áo ngũ thân? | 1.000 | 0.325 | 1.000 | Generation | Câu trả lời lệch trọng tâm câu hỏi hoặc không đủ cụ thể. |
 
 ---
 

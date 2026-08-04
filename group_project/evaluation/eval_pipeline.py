@@ -69,6 +69,7 @@ def _get_ragas_llm_and_embeddings():
         api_key=api_key,
         base_url="https://openrouter.ai/api/v1",
         temperature=0,
+        max_tokens=1024,
     )
     hf_embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
@@ -131,7 +132,7 @@ def build_ragas_dataset(golden_dataset: list[dict], run_fn) -> Dataset:
     return Dataset.from_dict(rows)
 
 
-def evaluate_config(golden_dataset: list[dict], run_fn, ragas_llm, ragas_embeddings) -> dict:
+def evaluate_config(golden_dataset: list[dict], run_fn, ragas_llm, ragas_embeddings):
     dataset = build_ragas_dataset(golden_dataset, run_fn)
     result = evaluate(
         dataset,
@@ -140,7 +141,8 @@ def evaluate_config(golden_dataset: list[dict], run_fn, ragas_llm, ragas_embeddi
         embeddings=ragas_embeddings,
         raise_exceptions=False,
     )
-    return result
+    per_question = result.to_pandas()
+    return result, per_question
 
 
 # =============================================================================
@@ -153,7 +155,7 @@ def _fmt(v) -> str:
     return f"{v:.3f}"
 
 
-def export_results(scores_a: dict, scores_b: dict, sample_size: int, golden_dataset: list[dict]):
+def export_results(scores_a: dict, scores_b: dict, sample_size: int, golden_dataset: list[dict], per_question_a=None):
     metrics = ["faithfulness", "answer_relevancy", "context_recall", "context_precision"]
 
     valid_a = [scores_a[m] for m in metrics if scores_a.get(m) == scores_a.get(m)]
@@ -222,9 +224,31 @@ def export_results(scores_a: dict, scores_b: dict, sample_size: int, golden_data
     lines.append("")
     lines.append("| # | Question | Faithfulness | Relevance | Recall | Failure Stage | Root Cause |")
     lines.append("|---|----------|-------------|-----------|--------|---------------|------------|")
-    lines.append("| 1 | *(xem per-question scores trong log console khi chạy `python eval_pipeline.py`)* | | | | | |")
-    lines.append("| 2 | | | | | | |")
-    lines.append("| 3 | | | | | | |")
+    if per_question_a is not None and len(per_question_a) > 0:
+        df = per_question_a.copy()
+        q_col = "user_input" if "user_input" in df.columns else "question"
+        for m in metrics:
+            if m not in df.columns:
+                df[m] = float("nan")
+        df["_avg"] = df[metrics].mean(axis=1, skipna=True)
+        worst = df.sort_values("_avg", na_position="first").head(3)
+
+        stage_map = {
+            "context_recall": ("Retrieval", "Context truy xuất không bao phủ đủ thông tin cần thiết trong ground truth."),
+            "context_precision": ("Retrieval", "Context truy xuất chứa nhiều đoạn không liên quan, xếp hạng chưa tối ưu."),
+            "faithfulness": ("Generation", "Câu trả lời chứa nội dung không được context hỗ trợ (có dấu hiệu hallucination)."),
+            "answer_relevancy": ("Generation", "Câu trả lời lệch trọng tâm câu hỏi hoặc không đủ cụ thể."),
+        }
+        for i, (_, row) in enumerate(worst.iterrows(), start=1):
+            question_text = str(row[q_col])[:70]
+            f_val, r_val, rec_val = row.get("faithfulness"), row.get("answer_relevancy"), row.get("context_recall")
+            worst_metric = min(metrics, key=lambda m: row[m] if row[m] == row[m] else float("inf"))
+            stage, root_cause = stage_map[worst_metric]
+            lines.append(
+                f"| {i} | {question_text} | {_fmt(f_val)} | {_fmt(r_val)} | {_fmt(rec_val)} | {stage} | {root_cause} |"
+            )
+    else:
+        lines.append("| — | Không có dữ liệu per-question (evaluation bị chặn hoàn toàn) | | | | | |")
     lines.append("")
     lines.append("---")
     lines.append("")
@@ -258,13 +282,13 @@ if __name__ == "__main__":
     ragas_llm, ragas_embeddings = _get_ragas_llm_and_embeddings()
 
     print("\n=== Config A: Hybrid Search + Reranking ===")
-    result_a = evaluate_config(sample, run_hybrid_rerank, ragas_llm, ragas_embeddings)
+    result_a, per_question_a = evaluate_config(sample, run_hybrid_rerank, ragas_llm, ragas_embeddings)
     scores_a = {k: v for k, v in result_a.items()}
     print(scores_a)
 
     print("\n=== Config B: Dense-only Retrieval ===")
-    result_b = evaluate_config(sample, run_dense_only, ragas_llm, ragas_embeddings)
+    result_b, _ = evaluate_config(sample, run_dense_only, ragas_llm, ragas_embeddings)
     scores_b = {k: v for k, v in result_b.items()}
     print(scores_b)
 
-    export_results(scores_a, scores_b, len(sample), golden_dataset)
+    export_results(scores_a, scores_b, len(sample), golden_dataset, per_question_a=per_question_a)
