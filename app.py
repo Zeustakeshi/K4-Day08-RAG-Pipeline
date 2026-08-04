@@ -79,7 +79,7 @@ if "messages" not in st.session_state:
     st.session_state.messages = [
         {
             "role": "assistant",
-            "content": "Xin chào! Tôi là Trợ lý AI RAG. Bạn cần hỗ trợ thông tin gì về **chính sách thương mại điện tử** hoặc **văn hóa truyền thống Việt Nam** hôm nay?",
+            "content": "Xin chào! Tôi là Trợ lý AI RAG. Bạn cần tra cứu thông tin gì về **văn hóa truyền thống Việt Nam** (Tết Nguyên Đán, Áo dài, Lễ hội, Việt Nam Phong Tục) hôm nay?",
             "sources": []
         }
     ]
@@ -93,7 +93,7 @@ if "pending_query" not in st.session_state:
 
 with st.sidebar:
     st.title("🤖 RAG Pipeline Control")
-    st.caption("Trợ lý hỏi đáp thông minh kết hợp Hybrid Search, Reranking & LLM Citation")
+    st.caption("Trợ lý hỏi đáp văn hóa kết hợp Hybrid Search, Reranking & LLM Citation")
     st.divider()
 
     # 1. Slider điều chỉnh top_k retrieval
@@ -102,14 +102,14 @@ with st.sidebar:
     
     st.divider()
 
-    # 2. Gợi ý câu hỏi trực quan
+    # 2. Gợi ý câu hỏi trực quan chuẩn bộ dữ liệu Văn Hóa Việt Nam
     st.subheader("💡 Câu hỏi gợi ý")
     suggestions = [
-        "Phong tục cúng Tết Nguyên Đán Việt Nam gồm những gì?",
-        "Thời hạn yêu cầu trả hàng/hoàn tiền là bao lâu?",
-        "Áo dài truyền thống Việt Nam có nguồn gốc từ đâu?",
-        "Quy định về bảo tồn di sản lễ hội truyền thống?",
-        "Cách mua hàng và thanh toán an toàn trên e-commerce?",
+        "Phong tục cúng Tết Nguyên Đán và những điều kiêng kỵ là gì?",
+        "Lịch sử hình thành và đặc điểm cấu tạo của Áo dài truyền thống?",
+        "Nguồn gốc và ý nghĩa văn hóa của ngày Giỗ Tổ Hùng Vương?",
+        "Quy định về quản lý và bảo tồn các lễ hội truyền thống?",
+        "Những tập quán, lễ nghi cổ truyền trong tác phẩm Việt Nam Phong Tục?",
     ]
 
     for idx, s in enumerate(suggestions):
@@ -137,8 +137,8 @@ with st.sidebar:
 # MAIN CHAT DISPLAY & HISTORY
 # =============================================================================
 
-st.title("💬 RAG Support & Knowledge Chatbot")
-st.caption("Hệ thống RAG Pipeline hỗ trợ truy vấn kiến thức đa nguồn có dẫn chứng nguồn tham khảo (Citations)")
+st.title("💬 Trợ Lý Hỏi Đáp Văn Hóa Việt Nam")
+st.caption("Hệ thống RAG Pipeline hỗ trợ truy vấn kiến thức văn hóa dân tộc có dẫn chứng nguồn tham khảo (Citations)")
 
 # Hàm hỗ trợ hiển thị danh sách nguồn tham khảo dạng Expander
 def display_sources(sources: list[dict]):
