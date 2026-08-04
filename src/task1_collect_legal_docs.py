@@ -25,33 +25,61 @@ tiêu đề mà không có nội dung thật. Đổi sang bài viết khác cùn
 và chỉ dùng nguồn công khai/được phép chia sẻ.
 """
 
+import asyncio
 from pathlib import Path
+from playwright.async_api import async_playwright
 
 DATA_DIR = Path(__file__).parent.parent / "data" / "landing" / "legal"
 
+async def download_shopee_policy(url: str, filename: str, role: str):
+    async with async_playwright() as p:
+        # Mở trình duyệt Chromium ẩn
+        browser = await p.chromium.launch(headless=True)
+        page = await browser.new_page()
+        
+        print(f"Đang tải dữ liệu thực tế từ: {url}")
+        
+        # Truy cập và chờ mạng tĩnh lặng để đảm bảo JS đã render xong nội dung
+        await page.goto(url, wait_until="networkidle")
+        await page.wait_for_timeout(3000) # Đợi thêm 3 giây cho chắc chắn
+        
+        # Chèn metadata vào đầu trang HTML trước khi xuất PDF
+        js_code = f"() => {{ const el = document.createElement('p'); el.innerText = 'Metadata: customer_role={role}'; document.body.prepend(el); }}"
+        await page.evaluate(js_code)
+        
+        # Xuất trang web ra file PDF
+        filepath = DATA_DIR / filename
+        await page.pdf(path=str(filepath), format="A4", print_background=True)
+        print(f"✓ Đã lưu file PDF: {filepath}")
+        
+        await browser.close()
 
-def setup_directory():
-    """Tạo thư mục data/landing/legal/ nếu chưa có."""
+async def main():
+    # Tạo thư mục nếu chưa có
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    print(f"✓ Thư mục đã sẵn sàng: {DATA_DIR}")
+    print(f"✓ Thư mục lưu trữ: {DATA_DIR}")
 
+    # Danh sách URL công khai của Shopee
+    policies = [
+        {
+            "url": "https://help.shopee.vn/portal/4/article/77251",
+            "filename": "returns-refund-policy.pdf",
+            "role": "buyer"
+        },
+        {
+            "url": "https://help.shopee.vn/portal/4/article/79198",
+            "filename": "payment-methods.pdf",
+            "role": "buyer"
+        },
+        {
+            "url": "https://help.shopee.vn/portal/4/article/77244",
+            "filename": "privacy-policy.pdf",
+            "role": "both"
+        }
+    ]
 
-# TODO: Tải file PDF/DOCX về DATA_DIR
-# Có thể tải thủ công hoặc viết script download nếu có direct link.
-#
-# Ví dụ nếu có direct link:
-#
-# import requests
-#
-# def download_file(url: str, filename: str):
-#     response = requests.get(url)
-#     filepath = DATA_DIR / filename
-#     filepath.write_bytes(response.content)
-#     print(f"✓ Đã tải: {filepath}")
-#
-# Nếu trang là HTML thuần (không phải PDF sẵn), có thể convert nội dung text
-# thành PDF đơn giản bằng thư viện fpdf2 (đã có trong requirements.txt).
-
+    for doc in policies:
+        await download_shopee_policy(doc["url"], doc["filename"], doc["role"])
 
 if __name__ == "__main__":
-    setup_directory()
+    asyncio.run(main())
