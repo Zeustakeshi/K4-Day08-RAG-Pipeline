@@ -19,14 +19,17 @@ import unicodedata
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
-
-PAGEINDEX_API_KEY = os.getenv("PAGEINDEX_API_KEY", "").strip()
 BASE_DIR = Path(__file__).parent.parent
 STANDARDIZED_DIR = BASE_DIR / "data" / "standardized"
 LANDING_NEWS_DIR = BASE_DIR / "data" / "landing" / "news"
 TEMP_PDF_DIR = BASE_DIR / "data" / "temp_pdfs"
 CACHE_FILE = BASE_DIR / "pageindex_doc_ids.json"
+
+
+def get_api_key() -> str:
+    """Đọc động PAGEINDEX_API_KEY từ .env, cho phép nhận API key ngay khi user vừa điền vào .env."""
+    load_dotenv(override=True)
+    return os.getenv("PAGEINDEX_API_KEY", "").strip()
 
 
 def to_ascii_safe(text: str) -> str:
@@ -73,20 +76,21 @@ def upload_documents() -> dict:
         try:
             cached_data = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
             if isinstance(cached_data, dict) and cached_data:
-                print(f"✓ Found cached doc_ids ({len(cached_data)} files) in {CACHE_FILE.name}")
+                print(f"✓ Tìm thấy cache doc_ids ({len(cached_data)} files) trong {CACHE_FILE.name}")
                 return cached_data
         except Exception:
             pass
 
     doc_ids = {}
+    api_key = get_api_key()
 
-    if not PAGEINDEX_API_KEY:
+    if not api_key:
         print("⚠ PAGEINDEX_API_KEY chưa được thiết lập trong .env")
         return doc_ids
 
     try:
         from pageindex import PageIndexClient
-        client = PageIndexClient(api_key=PAGEINDEX_API_KEY)
+        client = PageIndexClient(api_key=api_key)
     except Exception as e:
         print(f"⚠ Khởi tạo PageIndexClient thất bại: {e}")
         return doc_ids
@@ -111,7 +115,7 @@ def upload_documents() -> dict:
             pdf_path = TEMP_PDF_DIR / f"{src_file.stem}.pdf"
             convert_markdown_to_pdf(content, pdf_path, title=title)
 
-            print(f"Uploading {pdf_path.name} lên PageIndex...")
+            print(f"Uploading {pdf_path.name} lên PageIndex API...")
             resp = client.submit_document(str(pdf_path))
             doc_id = resp.get("doc_id") or resp.get("id")
             if doc_id:
@@ -143,46 +147,50 @@ def pageindex_search(query: str, top_k: int = 5) -> list[dict]:
             'source': 'pageindex'   # Đánh dấu nguồn retrieval
         }
     """
-    if PAGEINDEX_API_KEY:
+    api_key = get_api_key()
+
+    if api_key:
         try:
             from pageindex import PageIndexClient
-            client = PageIndexClient(api_key=PAGEINDEX_API_KEY)
+            client = PageIndexClient(api_key=api_key)
             doc_ids = upload_documents()
 
             if doc_ids:
                 all_results = []
-                for fname, doc_id in doc_ids.items():
-                    print(f"Querying PageIndex for doc_id={doc_id}...")
-                    resp = client.submit_query(doc_id=doc_id, query=query)
-                    retrieval_id = resp.get("retrieval_id") or resp.get("id")
+                target_items = list(doc_ids.items())[:3]
+                for fname, doc_id in target_items:
+                    try:
+                        resp = client.submit_query(doc_id=doc_id, query=query)
+                        retrieval_id = resp.get("retrieval_id") or resp.get("id")
 
-                    if retrieval_id:
-                        # Poll get_retrieval() cho tới khi status == completed
-                        for _ in range(12):
-                            retrieval = client.get_retrieval(retrieval_id)
-                            status = str(retrieval.get("status", "")).lower()
-                            if status in ("completed", "done", "success"):
-                                break
-                            time.sleep(1)
+                        if retrieval_id:
+                            for _ in range(6):
+                                retrieval = client.get_retrieval(retrieval_id)
+                                status = str(retrieval.get("status", "")).lower()
+                                if status in ("completed", "done", "success"):
+                                    break
+                                time.sleep(0.5)
 
-                        retrieved_nodes = retrieval.get("retrieved_nodes", [])
-                        for rank, node in enumerate(retrieved_nodes):
-                            for group in node.get("relevant_contents", []):
-                                for item in group:
-                                    text = item.get("relevant_content", "") or item.get("content", "")
-                                    if text:
-                                        all_results.append({
-                                            "content": text,
-                                            "score": round(max(0.1, 1.0 - rank * 0.1), 4),
-                                            "metadata": {"section": item.get("section_title", "General"), "file": fname},
-                                            "source": "pageindex"
-                                        })
+                            retrieved_nodes = retrieval.get("retrieved_nodes", [])
+                            for rank, node in enumerate(retrieved_nodes):
+                                for group in node.get("relevant_contents", []):
+                                    for item in group:
+                                        text = item.get("relevant_content", "") or item.get("content", "")
+                                        if text:
+                                            all_results.append({
+                                                "content": text,
+                                                "score": round(max(0.1, 1.0 - rank * 0.1), 4),
+                                                "metadata": {"section": item.get("section_title", "General"), "file": fname},
+                                                "source": "pageindex"
+                                            })
+                    except Exception as e:
+                        print(f"  ⚠ Query doc_id={doc_id} note: {e}")
 
                 if all_results:
                     all_results.sort(key=lambda x: x["score"], reverse=True)
                     return all_results[:top_k]
         except Exception as e:
-            print(f"⚠ PageIndex API error/skip: {e}. Chuyển sang cơ chế local fallback...")
+            print(f"⚠ PageIndex API query error: {e}. Chuyển sang cơ chế local fallback...")
 
     # Cơ chế fallback local nếu chưa set PAGEINDEX_API_KEY hoặc API tạm gián đoạn
     return _local_pageindex_fallback(query, top_k=top_k)
@@ -222,10 +230,11 @@ if __name__ == "__main__":
     print("Task 8: PageIndex Vectorless RAG")
     print("=" * 60)
 
-    if not PAGEINDEX_API_KEY:
+    current_key = get_api_key()
+    if not current_key:
         print("⚠ Chưa có PAGEINDEX_API_KEY trong .env (Dùng cơ chế Local Fallback)")
     else:
-        print(f"✓ Đã tìm thấy PAGEINDEX_API_KEY trong .env")
+        print(f"✓ Đã phát hiện PAGEINDEX_API_KEY trong .env: {current_key[:8]}...")
 
     print("\nChạy thử nghiệm tìm kiếm PageIndex:")
     test_results = pageindex_search("Phong tục Tết Nguyên Đán Việt Nam", top_k=3)
