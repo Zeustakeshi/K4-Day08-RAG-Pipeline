@@ -636,7 +636,7 @@
         title: "Thu Thập & Chuẩn Hoá Dữ Liệu (Task 1–3)",
         durationMinutes: 25,
         quickCmd: "python -m src.task1_collect_legal_docs\npython -m src.task2_crawl_news\npython -m src.task3_convert_markdown",
-        passCriteria: "Đủ >=3 file PDF/DOCX trong data/landing/legal/, >=5 file tin tức trong news/ và đã convert sang .md. (Cuối CP: Gọi ngẫu nhiên demo file .md & chia sẻ kinh nghiệm 5 phút).",
+        passCriteria: "Đủ >=3 file PDF/DOCX tài liệu văn hóa dân gian (phong tục, trang phục, lễ hội) trong data/landing/legal/, >=5 bài viết về lễ hội/phong tục trong news/ và đã convert sang .md. (Cuối CP: Gọi ngẫu nhiên demo file .md & chia sẻ kinh nghiệm 5 phút).",
         roles: {
           4: [
             {
@@ -647,15 +647,15 @@
             },
             {
               role: "Role 2", name: "Data & Retrieval Specialist", badgeClass: "badge-r2",
-              goal: "Task 1 — Tải >=3 file PDF/DOCX quy định gốc",
-              steps: ["Tìm văn bản chính sách (Học phí, Đổi trả...)", "Đặt tên file không dấu rõ ràng", "Hoàn thành hàm download_file() trong task1", "Lưu file vào data/landing/legal/"],
-              file: "src/task1_collect_legal_docs.py", gotcha: "Đặt tên file rõ ràng: tuition-fees.pdf."
+              goal: "Task 1 — Tải >=3 file PDF/DOCX tài liệu văn hóa dân gian gốc",
+              steps: ["Tìm tài liệu Viện Nghiên cứu Văn hóa, sách Văn hóa Dân gian Việt Nam, Hồ sơ Di sản Văn hóa Phi vật thể (phong tục, trang phục 54 dân tộc, Áo dài/Áo ngũ thân...)", "Đặt tên file không dấu rõ ràng", "Hoàn thành hàm download_file() trong task1", "Lưu file vào data/landing/legal/"],
+              file: "src/task1_collect_legal_docs.py", gotcha: "Đặt tên file rõ ràng: ao-ngu-than-truyen-thong.pdf."
             },
             {
               role: "Role 3", name: "Frontend & Chatbot Dev", badgeClass: "badge-r3",
-              goal: "Task 2 — Crawl >=5 bài tin tức/thông báo",
-              steps: ["Dùng Crawl4AI hoặc requests crawl bài viết", "Lưu mỗi bài thành 1 file .json chứa metadata", "Ghi rõ url, title, crawl_date, content", "Lưu file vào data/landing/news/"],
-              file: "src/task2_crawl_news.py", gotcha: "Mỗi bài báo lưu thành 1 file JSON chứa metadata."
+              goal: "Task 2 — Crawl >=5 bài viết về phong tục & lễ hội",
+              steps: ["Dùng Crawl4AI hoặc requests crawl bài viết về lễ hội lớn, phong tục tập quán, trang phục truyền thống", "Lưu mỗi bài thành 1 file .json chứa metadata", "Ghi rõ url, title, crawl_date, content", "Lưu file vào data/landing/news/"],
+              file: "src/task2_crawl_news.py", gotcha: "Mỗi bài viết lễ hội/phong tục lưu thành 1 file JSON chứa metadata."
             },
             {
               role: "Role 4", name: "Evaluation & QA Engineer", badgeClass: "badge-r4",
@@ -673,13 +673,13 @@
             },
             {
               role: "Role 2", name: "Data & Dense Search Dev", badgeClass: "badge-r2",
-              goal: "Task 1 — Thu thập văn bản chính sách PDF",
-              steps: ["Tải 3+ file PDF/DOCX chính sách", "Chạy task1_collect_legal_docs.py"],
+              goal: "Task 1 — Thu thập tài liệu văn hóa dân gian PDF",
+              steps: ["Tải 3+ file PDF/DOCX sách/hồ sơ về phong tục, trang phục, lễ hội", "Chạy task1_collect_legal_docs.py"],
               file: "src/task1_collect_legal_docs.py", gotcha: "File PDF phải >1KB."
             },
             {
               role: "Role 3", name: "Sparse & Rerank Dev", badgeClass: "badge-r3",
-              goal: "Task 2 — Crawl 5+ bài viết tin tức/thông báo",
+              goal: "Task 2 — Crawl 5+ bài viết về phong tục & lễ hội",
               steps: ["Chạy task2_crawl_news.py dùng Crawl4AI", "Kiểm tra output JSON trong news/"],
               file: "src/task2_crawl_news.py", gotcha: "Lưu đủ metadata URL và ngày crawl."
             },
@@ -700,19 +700,19 @@
             {
               role: "Role 1", name: "Team Leader & Architect", badgeClass: "badge-r1",
               goal: "Phân công nguồn crawl dữ liệu nhóm 6 người",
-              steps: ["Chia 3 nguồn PDF chính sách & 5 nguồn tin tức", "Kiểm tra tính nhất quán dữ liệu", "Đồng bộ code lên Git + theo dõi tiến độ các thành viên trong nhóm"],
+              steps: ["Chia 3 nguồn PDF tài liệu văn hóa dân gian & 5 nguồn bài viết lễ hội/phong tục", "Kiểm tra tính nhất quán dữ liệu", "Đồng bộ code lên Git + theo dõi tiến độ các thành viên trong nhóm"],
               file: "data/", gotcha: "Tránh nộp lặp lại 1 bài báo nhiều lần."
             },
             {
               role: "Role 2", name: "Data Scraper Dev", badgeClass: "badge-r2",
-              goal: "Task 1 — Tải văn bản quy định pháp lý PDF",
-              steps: ["Tải >=3 file PDF/DOCX vào legal/", "Hoàn thành script tự động tải nếu có URL"],
+              goal: "Task 1 — Tải tài liệu văn hóa dân gian PDF",
+              steps: ["Tải >=3 file PDF/DOCX (sách Văn hóa Dân gian, Hồ sơ Di sản Văn hóa Phi vật thể) vào legal/", "Hoàn thành script tự động tải nếu có URL"],
               file: "src/task1_collect_legal_docs.py", gotcha: "Kiểm tra dung lượng file."
             },
             {
               role: "Role 3", name: "Vector Search Dev", badgeClass: "badge-r3",
-              goal: "Task 2 — Crawl tin tức dịch vụ/hướng dẫn",
-              steps: ["Crawl 5+ bài tin tức bằng Crawl4AI", "Lưu file JSON chứa full text và metadata"],
+              goal: "Task 2 — Crawl bài viết phong tục/lễ hội",
+              steps: ["Crawl 5+ bài viết lễ hội, phong tục bằng Crawl4AI", "Lưu file JSON chứa full text và metadata"],
               file: "src/task2_crawl_news.py", gotcha: "Chạy playwright install chromium."
             },
             {
