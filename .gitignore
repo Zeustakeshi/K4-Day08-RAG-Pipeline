@@ -11,6 +11,8 @@ venv/
 
 # Temp PDF conversion cache
 data/_tmp_pdf/
+data/temp_pdfs/
+chroma_db/
 
 # Temp / cache
 .pytest_cache/
